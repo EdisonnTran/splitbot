@@ -23,9 +23,9 @@ class SpreadsheetAPI:
                 self.credentials.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file("credentials.json", self.SCOPES)
-                credentials = flow.run_local_server(port=0)
+                self.credentials = flow.run_local_server(port=0)
             with open("token.json", 'w') as token:
-                token.write(credentials.to_json())
+                token.write(self.credentials.to_json())
         
         try:
             service = build("sheets", "v4", credentials = self.credentials)
