@@ -9,36 +9,46 @@ from googleapiclient.errors import HttpError
 
 load_dotenv()
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"] 
+class SpreadsheetAPI:
 
-SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+    SCOPES = ["https://www.googleapis.com/auth/spreadsheets"] 
+    SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+
+    def __init__(self):
+        self.credentials = None
+        if os.path.exists("token.json"):
+            self.credentials = Credentials.from_authorized_user_file("token.json", self.SCOPES)
+        if not self.credentials or not self.credentials.valid:
+            if self.credentials and self.credentials.expired and self.credentials.refresh_token:
+                self.credentials.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file("credentials.json", self.SCOPES)
+                credentials = flow.run_local_server(port=0)
+            with open("token.json", 'w') as token:
+                token.write(credentials.to_json())
+        
+        try:
+            service = build("sheets", "v4", credentials = self.credentials)
+            self.sheets = service.spreadsheets()
+        
+        except HttpError as error:
+            print(error)
+
+    def add_spending(self): # params: self, title: str, cost: int, splitters: list[str]
+
+        try:
+            result = self.sheets.values().get(spreadsheetId=self.SPREADSHEET_ID, range="Sheet1!A2:E4").execute().get("values")[0][0]
+            self.sheets.values().update(spreadsheetId=self.SPREADSHEET_ID, range="Sheet1!E5", valueInputOption="USER_ENTERED", body={"values": [['']]}).execute()
+            print(result)
+        
+            # sheets.values().update(spreadsheetId=SPREADSHEET_ID, range="Sheet1!E5", valueInputOption="")
+
+        except HttpError as error:
+            print(error)
 
 def main():
-    credentials = None
-    if os.path.exists("token.json"):
-        credentials = Credentials.from_authorized_user_file("token.json", SCOPES)
-    if not credentials or not credentials.valid:
-        if credentials and credentials.expired and credentials.refresh_token:
-            credentials.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-            credentials = flow.run_local_server(port=0)
-        with open("token.json", 'w') as token:
-            token.write(credentials.to_json())
-
-    try:
-        service = build("sheets", "v4", credentials = credentials)
-        sheets = service.spreadsheets()
-
-        result = sheets.values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A2:E4").execute()
-
-        values = result.get("values", [])
-        
-        print(values)
-    
-    except HttpError as error:
-        print(error)
-
+    create = SpreadsheetAPI()
+    create.add_spending()
 
 if __name__ == "__main__":
     main()
