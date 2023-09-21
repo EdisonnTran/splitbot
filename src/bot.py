@@ -1,4 +1,5 @@
 from spreadsheetapi import SpreadsheetAPI
+import spreadsheetDB
 
 import os
 from dotenv import load_dotenv
@@ -23,9 +24,18 @@ async def ping(ctx):
     await ctx.message.add_reaction("👍")
 
 @bot.command()
-async def addSpending(ctx, title, cost, group):
-    people = group.split()
-    sheet.add_spending(title, cost, people)
+async def addSpending(ctx, title, cost, *args):
+    spreadsheet = spreadsheetDB.get_spreadsheet(str(ctx.guild.id))
+    sheet.add_spending(spreadsheet, title, float(cost), [*args])
+    await ctx.message.add_reaction("✅")
+
+@bot.command()
+async def addSpreadsheet(ctx, spreadsheet_id):
+    server_id = str(ctx.guild.id)
+    spreadsheetDB.add_spreadsheet(server_id, spreadsheet_id)
+    await ctx.message.add_reaction("✅")
+
+
 
 
 bot.run(DISCORD_TOKEN)
