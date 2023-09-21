@@ -34,12 +34,18 @@ class SpreadsheetAPI:
         except HttpError as error:
             print(error)
 
-    def add_spending(self): # params: self, title: str, cost: int, splitters: list[str]
-
+    def add_spending(self, title: str, cost: int, splitters: list[str]): # params: self, title: str, cost: int, splitters: list[str]
+        spreadsheet = self.sheets.values()
         try:
-            result = self.sheets.values().get(spreadsheetId=self.SPREADSHEET_ID, range="Sheet1!A2:E4").execute().get("values")[0][0]
-            self.sheets.values().update(spreadsheetId=self.SPREADSHEET_ID, range="Sheet1!E5", valueInputOption="USER_ENTERED", body={"values": [['']]}).execute()
-            print(result)
+
+            # bad practice, in the future will store the current line in a variable and increment it.
+            line = 1
+            while spreadsheet.get(spreadsheetId=self.SPREADSHEET_ID, range=f"Sheet1!{line}:{line}").execute().get("values") != None:
+                line += 1
+
+            spreadsheet.update(spreadsheetId=self.SPREADSHEET_ID, range=f"Sheet1!A{line}", valueInputOption="USER_ENTERED", body={"values": [[f'{title}']]}).execute()
+            spreadsheet.update(spreadsheetId=self.SPREADSHEET_ID, range=f"Sheet1!B{line}", valueInputOption="USER_ENTERED", body={"values": [[f'{cost}']]}).execute()
+            spreadsheet.update(spreadsheetId=self.SPREADSHEET_ID, range=f"Sheet1!C{line}", valueInputOption="USER_ENTERED", body={"values": [[f'{splitters}']]}).execute()
         
             # sheets.values().update(spreadsheetId=SPREADSHEET_ID, range="Sheet1!E5", valueInputOption="")
 

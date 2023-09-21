@@ -17,5 +17,15 @@ bot = commands.Bot(command_prefix='%', intents=discord.Intents.all())
 async def on_ready():
     print("Hello!")
 
+@bot.command()
+async def ping(ctx):
+    await ctx.send("Pong")
+    await ctx.message.add_reaction("👍")
+
+@bot.command()
+async def addSpending(ctx, title, cost, group):
+    people = group.split()
+    sheet.add_spending(title, cost, people)
+
 
 bot.run(DISCORD_TOKEN)
